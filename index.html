@@ -3,69 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safari RA - Explorador de Cães</title>
-    <!-- Frameworks -->
+    <title>Safari RA - Explorador</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <!-- Animações -->
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .ui-overlay { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none; }
-        .controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 100; }
-        .info-panel { position: absolute; right: 20px; top: 20px; width: 250px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 15px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        button { pointer-events: auto; background: white; padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; }
+        .ui-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 10px; pointer-events: auto; }
+        .info-panel { position: absolute; right: 20px; top: 20px; width: 250px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 15px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); pointer-events: auto; }
+        button { background: #10B981; color: white; padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
 
-    <a-scene embedded 
-             vr-mode-ui="enabled: false" 
-             arjs="sourceType: webcam; debugUIEnabled: false;"
-             renderer="colorManagement: true; physicallyCorrectLights: true;">
-        
+    <!-- Cenário RA -->
+    <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;">
         <a-assets>
             <a-asset-item id="cao-model" src="scene.gltf"></a-asset-item>
         </a-assets>
 
-        <a-marker preset="hiro" id="hiro-marker">
-            <!-- Contentor para rotação e ajuste -->
-            <a-entity id="cao-container" rotation="0 0 0">
-                <a-entity id="meu-cao"
-                          gltf-model="#cao-model" 
-                          scale="0.3 0.3 0.3" 
-                          position="0 0 0"
-                          animation-mixer="clip: *; loop: repeat;">
-                </a-entity>
-            </a-entity>
+        <!-- Marcador Cão (Hiro) -->
+        <a-marker preset="hiro" id="marker-cao">
+            <a-entity id="meu-cao" gltf-model="#cao-model" scale="0.3 0.3 0.3" position="0 0 0"></a-entity>
         </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
 
+    <!-- UI Overlay -->
     <div class="ui-overlay">
-        <h1 class="text-2xl font-bold text-white shadow-black drop-shadow-lg">Cão Explorador 🐕</h1>
-    </div>
+        <div id="panel-info" class="info-panel">
+            <h2 id="animal-title" class="font-bold text-lg mb-2">Cão</h2>
+            <p id="animal-desc" class="text-sm">Explora o modelo 3D...</p>
+            <button onclick="document.getElementById('panel-info').style.display='none'" class="mt-4 bg-gray-500 text-xs w-full">Fechar</button>
+        </div>
 
-    <div class="info-panel" id="panel-info">
-        <h2 class="font-bold mb-2">Canis lupus familiaris</h2>
-        <p class="text-sm">O cão é um mamífero carnívoro. Este modelo 3D mostra a estrutura detalhada e as texturas reais do pelo.</p>
-        <button onclick="document.getElementById('panel-info').style.display='none'" class="mt-4 bg-gray-200 text-xs">Fechar</button>
-    </div>
-
-    <div class="controls">
-        <button onclick="document.getElementById('panel-info').style.display='block'">Info</button>
-        <button onclick="rodarCao()">Rodar</button>
-        <button onclick="document.location.reload()">Sair/Reset</button>
+        <div class="controls">
+            <button onclick="rodarModelo()">Rodar</button>
+            <button onclick="mostrarInfo()">Info</button>
+            <button onclick="document.location.reload()" style="background:#EF4444;">Sair</button>
+        </div>
     </div>
 
     <script>
-        function rodarCao() {
-            const container = document.getElementById('cao-container');
-            const rot = container.getAttribute('rotation');
-            container.setAttribute('rotation', {x: rot.x, y: rot.y + 45, z: rot.z});
+        // Lógica de interação
+        function rodarModelo() {
+            const el = document.querySelector('#meu-cao');
+            const rot = el.getAttribute('rotation');
+            el.setAttribute('rotation', {x: rot.x, y: rot.y + 45, z: rot.z});
         }
+
+        function mostrarInfo() {
+            document.getElementById('panel-info').style.display = 'block';
+        }
+
+        // Deteção de marcadores
+        const marker = document.querySelector('#marker-cao');
+        marker.addEventListener('markerFound', () => {
+            document.getElementById('animal-title').innerText = "Cão Explorador";
+            document.getElementById('animal-desc').innerText = "Este é um cão. Eles têm um olfato incrível!";
+        });
     </script>
 </body>
-</html>
 </html>
