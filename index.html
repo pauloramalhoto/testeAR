@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Safari RA - Explorador</title>
+    <!-- A-Frame, AR.js e Extras para Animações -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     <style>
         .ui-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
         .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 10px; pointer-events: auto; }
@@ -16,15 +17,14 @@
 </head>
 <body style="margin: 0; overflow: hidden;">
 
-    <!-- Cenário RA -->
     <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;">
         <a-assets>
             <a-asset-item id="cao-model" src="scene.gltf"></a-asset-item>
         </a-assets>
 
-        <!-- Marcador Cão (Hiro) -->
-        <a-marker preset="hiro" id="marker-cao">
-            <a-entity id="meu-cao" gltf-model="#cao-model" scale="0.3 0.3 0.3" position="0 0 0"></a-entity>
+        <!-- Marcador Customizado -->
+        <a-marker type="pattern" url="pattern-Gemini_Generated_Image_u4nhbwu4nhbwu4nh.patt" id="marker-cao">
+            <a-entity id="meu-cao" gltf-model="#cao-model" scale="0.3 0.3 0.3" position="0 0 0" animation-mixer></a-entity>
         </a-marker>
 
         <a-entity camera></a-entity>
@@ -46,7 +46,6 @@
     </div>
 
     <script>
-        // Lógica de interação
         function rodarModelo() {
             const el = document.querySelector('#meu-cao');
             const rot = el.getAttribute('rotation');
@@ -57,7 +56,7 @@
             document.getElementById('panel-info').style.display = 'block';
         }
 
-        // Deteção de marcadores
+        // Deteção de marcadores para info dinâmica
         const marker = document.querySelector('#marker-cao');
         marker.addEventListener('markerFound', () => {
             document.getElementById('animal-title').innerText = "Cão Explorador";
