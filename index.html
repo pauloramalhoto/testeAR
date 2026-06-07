@@ -6,26 +6,62 @@
     <title>Explorador de Animais RA</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <style>
+        .ui-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 10px; pointer-events: auto; }
+        .info-panel { position: absolute; right: 20px; top: 20px; width: 250px; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 15px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); pointer-events: auto; }
+        button { background: #10B981; color: white; padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; }
+    </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
 
     <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;">
         
         <a-assets>
-            <!-- Carrega o modelo. Se houver erro, a consola indicará o ficheiro em falta -->
             <a-asset-item id="cao-model" src="scene.gltf"></a-asset-item>
         </a-assets>
 
-        <!-- Marcador Personalizado -->
+        <!-- Ajustado rotation para -90 0 0 para corrigir a visão do dorso -->
         <a-marker type="pattern" url="pattern-Gemini_Generated_Image_u4nhbwu4nhbwu4nh.patt">
-            <a-entity gltf-model="#cao-model" 
-                      scale="0.2 0.2 0.2" 
-                      position="0 0 0">
+            <a-entity id="meu-cao"
+                      gltf-model="#cao-model" 
+                      scale="0.3 0.3 0.3" 
+                      position="0 0 0"
+                      rotation="-90 0 0"
+                      animation-mixer>
             </a-entity>
         </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
 
+    <div class="ui-overlay">
+        <div id="panel-info" class="info-panel">
+            <h2 id="animal-title">Cão</h2>
+            <p>O cão é o melhor amigo do homem, conhecido pela sua lealdade e inteligência.</p>
+            <button onclick="document.getElementById('panel-info').style.display='none'" style="background:#6B7280; width:100%; margin-top:10px;">Fechar</button>
+        </div>
+
+        <div class="controls">
+            <button onclick="rodarModelo()">Rodar</button>
+            <button onclick="mostrarInfo()">Info</button>
+            <button onclick="document.location.reload()" style="background:#EF4444;">Sair</button>
+        </div>
+    </div>
+
+    <script>
+        const model = document.querySelector('#meu-cao');
+        
+        function rodarModelo() {
+            const rot = model.getAttribute('rotation');
+            // Rodar no eixo Z para ver de lado
+            model.setAttribute('rotation', {x: rot.x, y: rot.y, z: rot.z + 45});
+        }
+
+        function mostrarInfo() {
+            document.getElementById('panel-info').style.display = 'block';
+        }
+    </script>
 </body>
 </html>
