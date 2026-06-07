@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atividade AR: Explorador de Cães</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+
+    <a-scene embedded 
+             vr-mode-ui="enabled: false" 
+             arjs="sourceType: webcam; debugUIEnabled: false;">
+        
+        <a-assets>
+            <!-- O ficheiro gltf irá automaticamente procurar o .bin e as texturas na mesma pasta -->
+            <a-asset-item id="cao-model" src="scene.gltf"></a-asset-item>
+        </a-assets>
+
+        <a-marker preset="hiro">
+            <!-- Modelo 3D do Cão -->
+            <a-entity gltf-model="#cao-model" 
+                      scale="0.3 0.3 0.3" 
+                      position="0 0 0">
+            </a-entity>
+
+            <!-- Painel Informativo em RA -->
+            <a-plane position="0 1.2 0" rotation="-90 0 0" width="2" height="0.6" color="#ffffff" opacity="0.8">
+                <a-text value="Cão (Canis lupus familiaris)\nO melhor amigo do homem.\nObserva os detalhes do pelo!" 
+                        align="center" color="black" scale="0.5 0.5 0.5"></a-text>
+            </a-plane>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <!-- UI Overlay para interação -->
+    <div style="position: absolute; top: 10px; width: 100%; text-align: center; color: white; font-family: sans-serif; pointer-events: none;">
+        <h1>Explorador de Cães 🐕</h1>
+        <p>Aponta a câmara para o código Hiro!</p>
+    </div>
+</body>
+</html>
