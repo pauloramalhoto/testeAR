@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Safari Escolar RA</title>
-    <script defer src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script defer src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script defer src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
-    <script defer src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
+    <script src="vendor/aframe.min.js"></script>
+    <script src="vendor/aframe-ar.js"></script>
+    <script src="vendor/gesture-detector.js"></script>
+    <script src="vendor/gesture-handler.js"></script>
     <style>
         :root {
             --ink: #172026;
@@ -1159,8 +1159,8 @@
                 if (checks >= 30) {
                     clearInterval(timer);
                     document.getElementById('scan-title').textContent = 'Modo RA indisponível nesta abertura';
-                    document.getElementById('scan-copy').textContent = 'A caderneta continua disponível. Se estiveres no GitHub Pages, recarrega a página e confirma que a câmara tem permissão.';
-                    showToast('RA não carregou', 'As bibliotecas externas A-Frame/AR.js não responderam a tempo.');
+                    document.getElementById('scan-copy').textContent = 'A caderneta continua disponível. Recarrega a página e confirma que a câmara tem permissão.';
+                    showToast('RA não carregou', 'A-Frame/AR.js não responderam a tempo.');
                 }
             }, 500);
         }
