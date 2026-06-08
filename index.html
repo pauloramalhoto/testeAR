@@ -23,14 +23,14 @@
             <a-asset-item id="cell-model" src="animal_cell/scene.gltf"></a-asset-item>
         </a-assets>
 
-        <!-- Marcador do Labrador - Agora com os mesmos parâmetros de interação da célula -->
+        <!-- Marcador do Labrador: Adicionamos um container para ajustar o eixo de rotação -->
         <a-marker type="pattern" url="pattern-Gemini_Generated_Image_u4nhbwu4nhbwu4nh.patt" id="marker-cao">
-            <a-entity id="entidade-cao"
-                      gltf-model="#cao-model" 
-                      scale="0.2 0.2 0.2" 
-                      rotation="-90 0 0" 
-                      class="clickable" 
-                      gesture-handler>
+            <a-entity class="clickable" gesture-handler>
+                <a-entity gltf-model="#cao-model" 
+                          scale="0.2 0.2 0.2" 
+                          position="0 0 0" 
+                          rotation="-90 0 0">
+                </a-entity>
             </a-entity>
         </a-marker>
 
