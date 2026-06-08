@@ -1133,7 +1133,7 @@
                     loadOptionalModel('marker-cao', 'fallback-cao', 'labrador_dog/scene.gltf', '0.2 0.2 0.2', '-90 0 0');
                     loadOptionalModel('marker-celula', 'fallback-celula', 'animal_cell/scene.gltf', '0.3 0.3 0.3', '-90 0 0');
                 }
-                if (attempts >= 20) clearInterval(timer);
+                if (attempts >= 60) clearInterval(timer);
             }, 250);
         }
 
@@ -1147,13 +1147,22 @@
         bootArEnhancements();
 
         function scheduleArHealthCheck() {
-            setTimeout(() => {
-                if (!window.AFRAME) {
-                    document.getElementById('scan-title').textContent = 'Modo RA indisponível nesta abertura';
-                    document.getElementById('scan-copy').textContent = 'Confirma a ligação à internet para carregar A-Frame/AR.js e abre a app por localhost ou HTTPS para usar a câmara.';
-                    showToast('RA não carregou', 'A caderneta continua disponível; a câmara precisa das bibliotecas externas.');
+            let checks = 0;
+            const timer = setInterval(() => {
+                checks += 1;
+                if (window.AFRAME) {
+                    clearInterval(timer);
+                    renderHud();
+                    return;
                 }
-            }, 1800);
+
+                if (checks >= 30) {
+                    clearInterval(timer);
+                    document.getElementById('scan-title').textContent = 'Modo RA indisponível nesta abertura';
+                    document.getElementById('scan-copy').textContent = 'A caderneta continua disponível. Se estiveres no GitHub Pages, recarrega a página e confirma que a câmara tem permissão.';
+                    showToast('RA não carregou', 'As bibliotecas externas A-Frame/AR.js não responderam a tempo.');
+                }
+            }, 500);
         }
 
         scheduleArHealthCheck();
