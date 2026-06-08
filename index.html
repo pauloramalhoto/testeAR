@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Safari Escolar RA</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
@@ -10,15 +10,18 @@
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .ar-view { display: block; }
-        .album-view { display: none; }
-        .cromo-locked { filter: grayscale(1) brightness(0.5); }
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        .ar-view { display: block; position: relative; height: 100vh; }
+        .album-view { display: none; height: 100vh; overflow-y: auto; background: #f3f4f6; padding-bottom: 80px; }
+        .cromo-locked { filter: grayscale(1) brightness(0.3); }
+        /* Ajuste para "safe areas" (notch) */
+        .safe-padding { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body>
 
     <!-- Ecrã RA -->
-    <div id="view-ar" class="ar-view h-screen w-screen">
+    <div id="view-ar" class="ar-view">
         <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;" gesture-detector>
             <a-assets>
                 <a-asset-item id="cao-model" src="labrador_dog/scene.gltf"></a-asset-item>
@@ -34,30 +37,32 @@
             </a-marker>
             <a-entity camera></a-entity>
         </a-scene>
-        <button onclick="toggleView()" class="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg z-[9999]">📒 Álbum</button>
+        
+        <button onclick="toggleView()" class="fixed top-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg z-[9999]">📒</button>
     </div>
 
     <!-- Ecrã Caderneta -->
-    <div id="view-album" class="album-view min-h-screen p-6">
-        <h1 class="text-3xl font-bold text-center mb-6">Caderneta Safari 🐾</h1>
-        <div class="grid grid-cols-2 gap-4" id="album-grid">
-            <!-- Cromos inseridos via JS -->
+    <div id="view-album" class="album-view p-6 safe-padding">
+        <h1 class="text-2xl font-bold text-center mb-6">Caderneta Safari 🐾</h1>
+        <div class="grid grid-cols-2 gap-4" id="album-grid"></div>
+        <div class="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200">
+            <button onclick="partilharConquistas()" class="w-full bg-green-600 text-white p-4 rounded-xl font-bold mb-2">Partilhar Conquistas 🌟</button>
+            <button onclick="toggleView()" class="w-full bg-gray-500 text-white p-4 rounded-xl font-bold">Voltar ao Safari</button>
         </div>
-        <button onclick="partilharConquistas()" class="w-full mt-8 bg-green-600 text-white p-4 rounded-xl font-bold">Partilhar Conquistas 🌟</button>
-        <button onclick="toggleView()" class="w-full mt-4 bg-gray-500 text-white p-4 rounded-xl">Voltar ao Safari</button>
     </div>
 
     <script>
-        const colheita = JSON.parse(localStorage.getItem('safari_cromos')) || { cao: false, celula: false };
+        let colheita = JSON.parse(localStorage.getItem('safari_cromos')) || { cao: false, celula: false };
         const cromos = {
-            cao: { nome: "Labrador", desc: "O fiel Labrador." },
-            celula: { nome: "Célula", desc: "A unidade da vida." }
+            cao: { nome: "Labrador", desc: "O fiel companheiro." },
+            celula: { nome: "Célula", desc: "Unidade da vida." }
         };
 
         function toggleView() {
-            document.getElementById('view-ar').style.display = document.getElementById('view-ar').style.display === 'none' ? 'block' : 'none';
-            document.getElementById('view-album').style.display = document.getElementById('view-album').style.display === 'block' ? 'none' : 'block';
-            renderAlbum();
+            const ar = document.getElementById('view-ar');
+            const album = document.getElementById('view-album');
+            if(ar.style.display === 'none') { ar.style.display = 'block'; album.style.display = 'none'; }
+            else { ar.style.display = 'none'; album.style.display = 'block'; renderAlbum(); }
         }
 
         function marcarEncontrado(id) {
@@ -73,9 +78,9 @@
             grid.innerHTML = '';
             for(const id in cromos) {
                 const isFound = colheita[id];
-                grid.innerHTML += `<div class="bg-white p-4 rounded-xl shadow ${isFound ? '' : 'cromo-locked'}">
+                grid.innerHTML += `<div class="bg-white p-4 rounded-xl shadow border-2 ${isFound ? 'border-green-400' : 'border-gray-200 cromo-locked'}">
                     <h2 class="font-bold">${cromos[id].nome}</h2>
-                    <p class="text-sm">${isFound ? cromos[id].desc : "Por encontrar..."}</p>
+                    <p class="text-xs text-gray-500 mt-1">${isFound ? cromos[id].desc : "Por encontrar..."}</p>
                 </div>`;
             }
         }
@@ -84,20 +89,11 @@
         document.querySelector('#marker-cell').addEventListener('markerFound', () => marcarEncontrado('celula'));
 
         function partilharConquistas() {
-            const total = Object.values(colheita).filter(Boolean).length;
-            const texto = `Consegui encontrar ${total} animais no Safari Escolar! 🐾`;
-            if (navigator.share) { navigator.share({title: 'Safari Escolar', text: texto}); }
-            else { alert(texto); }
+            const count = Object.values(colheita).filter(Boolean).length;
+            const text = `Safari Escolar: Já encontrei ${count}/2 animais! 🐾`;
+            if (navigator.share) { navigator.share({title: 'Safari Escolar', text: text}); }
+            else { alert(text); }
         }
     </script>
 </body>
 </html>
-```
-
-### Por que esta solução é a ideal para a escola:
-1.  **Sem Registo Complexo:** Não precisas de API do Google. O `localStorage` funciona como um "perfil" do aluno no navegador do telemóvel dele. Ele fecha a app, abre no dia seguinte e os cromos continuam lá.
-2.  **Motivação Visual:** O efeito `grayscale` nos cromos que faltam encontrar cria o desejo de "completar a coleção".
-3.  **Partilha Simples:** Usei a `navigator.share` API. Se o telemóvel for moderno, ao clicar em "Partilhar", abre-se automaticamente o menu para enviar por WhatsApp, Classroom ou Email.
-4.  **Botão de Reset:** Se um aluno quiser começar do zero, podes adicionar um botão "Apagar Tudo" (mas, por agora, deixei apenas o Reiniciar Câmara para evitar acidentes).
-
-**Próximo passo:** Testa no telemóvel. Quando encontrares o animal, o `alert` vai confirmar a descoberta e, ao abrires o "Álbum", verás o cromo desbloqueado! O que achas desta mecânica?
