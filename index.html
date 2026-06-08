@@ -50,13 +50,20 @@
     <script>
         const quiz = document.getElementById('quiz-panel');
         const markerCao = document.querySelector('#marker-cao');
+        const resultado = document.getElementById('resultado');
 
         markerCao.addEventListener('markerFound', () => {
             quiz.style.display = 'block';
+            resultado.innerText = ""; // Limpa o resultado anterior
         });
 
         function verificar(correto) {
-            document.getElementById('resultado').innerText = correto ? "Correto! 🐾" : "Tenta outra vez!";
+            resultado.innerText = correto ? "Correto! 🐾" : "Tenta outra vez!";
+            
+            // Fecha o painel após 1.5 segundos
+            setTimeout(() => {
+                quiz.style.display = 'none';
+            }, 1500);
         }
     </script>
 </body>
