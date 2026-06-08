@@ -205,6 +205,45 @@
         .guide-card strong { display: block; margin-bottom: 4px; }
         .guide-card span { color: rgba(255,255,255,0.78); font-size: 0.92rem; }
 
+        .demo-panel {
+            position: fixed;
+            left: 18px;
+            right: 18px;
+            bottom: max(128px, calc(env(safe-area-inset-bottom) + 128px));
+            z-index: 11;
+            display: none;
+            gap: 8px;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 10px;
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .demo-panel.open {
+            display: grid;
+        }
+
+        .demo-panel strong {
+            font-size: 0.86rem;
+        }
+
+        .demo-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .demo-actions button {
+            min-height: 42px;
+            border-radius: var(--radius);
+            background: var(--leaf);
+            color: #fff;
+            font-weight: 900;
+        }
+
         .toast-stack {
             position: fixed;
             top: max(84px, calc(env(safe-area-inset-top) + 84px));
@@ -615,6 +654,13 @@
                 width: 420px;
             }
 
+            .demo-panel {
+                left: 22px;
+                right: auto;
+                width: 420px;
+                margin: 0;
+            }
+
             .album-layout {
                 grid-template-columns: 220px 1fr;
                 grid-template-rows: auto 1fr auto;
@@ -718,6 +764,14 @@
             </div>
 
             <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+            <div class="demo-panel" id="demo-panel">
+                <strong>Modo demonstração</strong>
+                <div class="demo-actions">
+                    <button type="button" onclick="simulateMarker('cao')">Labrador</button>
+                    <button type="button" onclick="simulateMarker('celula')">Célula</button>
+                </div>
+            </div>
 
             <div class="scan-guide">
                 <div class="guide-card">
@@ -856,6 +910,7 @@
         };
 
         let state = loadState();
+        const demoMode = new URLSearchParams(window.location.search).has('demo');
 
         function loadState() {
             try {
@@ -927,6 +982,11 @@
             }
         }
 
+        function simulateMarker(id) {
+            marcarEncontrado(id);
+            toggleView('album');
+        }
+
         function renderAll() {
             renderHud();
             renderAlbum();
@@ -944,6 +1004,13 @@
             const progress = Math.round((count / total) * 100);
             document.getElementById('hud-count').textContent = `${count}/${total}`;
             document.getElementById('hud-progress').style.width = `${progress}%`;
+            if (demoMode) {
+                document.getElementById('scan-title').textContent = count === total ? 'Demonstração completa' : 'Modo demonstração ativo';
+                document.getElementById('scan-copy').textContent = count === total
+                    ? 'Todos os cromos foram simulados. Abre a caderneta para rever as descobertas.'
+                    : 'Usa os botões para simular a leitura dos marcadores sem câmara.';
+                return;
+            }
             document.getElementById('scan-title').textContent = count === total ? 'Safari completo' : 'Aponta a câmara para um marcador';
             document.getElementById('scan-copy').textContent = count === total
                 ? 'Todos os cromos foram encontrados. Abre a caderneta para rever as descobertas.'
@@ -1195,11 +1262,15 @@
 
         bindMarker('marker-cao', 'cao');
         bindMarker('marker-celula', 'celula');
+        if (demoMode) {
+            document.getElementById('demo-panel').classList.add('open');
+        }
         renderAll();
         bootArEnhancements();
         window.addEventListener('resize', fitArViewport);
 
         function scheduleArHealthCheck() {
+            if (demoMode) return;
             let checks = 0;
             const timer = setInterval(() => {
                 checks += 1;
