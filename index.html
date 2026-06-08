@@ -63,6 +63,33 @@
             background: #111;
         }
 
+        .ar-view a-scene,
+        .ar-view canvas,
+        .ar-view video,
+        .ar-view .a-canvas,
+        body > video {
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            max-width: none !important;
+            max-height: none !important;
+        }
+
+        .ar-view video,
+        body > video {
+            position: fixed !important;
+            inset: 0 !important;
+            object-fit: cover !important;
+            z-index: 0 !important;
+        }
+
+        .ar-view canvas,
+        .ar-view .a-canvas {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 1 !important;
+        }
+
         .app-view {
             display: none;
             height: 100vh;
