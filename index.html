@@ -4,96 +4,1159 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Safari Escolar RA</title>
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script defer src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script defer src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
+    <script defer src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        .ar-view { display: block; position: relative; height: 100vh; }
-        .album-view { display: none; height: 100vh; overflow-y: auto; background: #f3f4f6; padding-bottom: 80px; }
-        .cromo-locked { filter: grayscale(1) brightness(0.3); }
-        /* Ajuste para "safe areas" (notch) */
-        .safe-padding { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+        :root {
+            --ink: #172026;
+            --muted: #60707c;
+            --paper: #fffaf0;
+            --surface: #ffffff;
+            --line: #d7e0d2;
+            --leaf: #2f7d4f;
+            --leaf-dark: #1f5f3b;
+            --sky: #2d7bbd;
+            --sun: #f2b84b;
+            --coral: #d75b4b;
+            --shadow: 0 18px 45px rgba(23, 32, 38, 0.18);
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #101820;
+        }
+
+        button, input, select {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        button:focus-visible, input:focus-visible {
+            outline: 3px solid rgba(45, 123, 189, 0.4);
+            outline-offset: 2px;
+        }
+
+        .app-shell {
+            min-height: 100vh;
+            min-height: 100dvh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ar-view {
+            display: block;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            background: #111;
+        }
+
+        .app-view {
+            display: none;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(239, 245, 236, 0.98)),
+                radial-gradient(circle at 20% 0%, rgba(242, 184, 75, 0.22), transparent 35%),
+                radial-gradient(circle at 90% 10%, rgba(45, 123, 189, 0.18), transparent 34%);
+        }
+
+        .safe-top { padding-top: max(14px, env(safe-area-inset-top)); }
+        .safe-bottom { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+
+        .top-hud {
+            position: fixed;
+            left: 12px;
+            right: 12px;
+            top: max(12px, env(safe-area-inset-top));
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .hud-panel {
+            pointer-events: auto;
+            min-width: 0;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: var(--radius);
+            background: rgba(16, 24, 32, 0.74);
+            color: #fff;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .hud-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .hud-title small {
+            color: rgba(255,255,255,0.76);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .progress-track {
+            height: 8px;
+            margin-top: 8px;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.22);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--sun), #78c66a);
+            transition: width 260ms ease;
+        }
+
+        .icon-button {
+            pointer-events: auto;
+            display: inline-grid;
+            place-items: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 999px;
+            background: var(--surface);
+            color: var(--ink);
+            box-shadow: var(--shadow);
+            font-size: 23px;
+        }
+
+        .scan-guide {
+            position: fixed;
+            left: 18px;
+            right: 18px;
+            bottom: max(18px, env(safe-area-inset-bottom));
+            z-index: 8;
+            display: grid;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .guide-card {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            border-radius: var(--radius);
+            background: rgba(16, 24, 32, 0.72);
+            color: #fff;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+        }
+
+        .guide-card strong { display: block; margin-bottom: 4px; }
+        .guide-card span { color: rgba(255,255,255,0.78); font-size: 0.92rem; }
+
+        .toast-stack {
+            position: fixed;
+            top: max(84px, calc(env(safe-area-inset-top) + 84px));
+            left: 12px;
+            right: 12px;
+            z-index: 20;
+            display: grid;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 12px 14px;
+            border-left: 5px solid var(--sun);
+            border-radius: var(--radius);
+            background: var(--surface);
+            box-shadow: var(--shadow);
+            animation: slideIn 180ms ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-8px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .album-layout {
+            height: 100%;
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+        }
+
+        .app-header {
+            padding: 14px 16px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            min-width: 0;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: clamp(1.35rem, 4vw, 2rem);
+            line-height: 1.05;
+        }
+
+        .brand p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.94rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 0 12px 12px;
+            border-bottom: 1px solid rgba(96, 112, 124, 0.22);
+        }
+
+        .tab-button {
+            min-height: 44px;
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.62);
+            color: var(--muted);
+            font-weight: 800;
+            font-size: 0.86rem;
+        }
+
+        .tab-button.active {
+            background: var(--leaf);
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(47, 125, 79, 0.22);
+        }
+
+        .content {
+            overflow-y: auto;
+            padding: 14px 14px 92px;
+        }
+
+        .panel {
+            display: none;
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .summary-band {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-bottom: 14px;
+        }
+
+        .metric {
+            min-height: 86px;
+            padding: 12px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.78);
+        }
+
+        .metric b {
+            display: block;
+            font-size: 1.45rem;
+            line-height: 1;
+            color: var(--leaf-dark);
+        }
+
+        .metric span {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .card {
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: rgba(255,255,255,0.86);
+            box-shadow: 0 8px 20px rgba(23, 32, 38, 0.08);
+            overflow: hidden;
+        }
+
+        .cromo-button {
+            width: 100%;
+            min-height: 196px;
+            padding: 0;
+            text-align: left;
+            color: inherit;
+            background: transparent;
+        }
+
+        .cromo-art {
+            min-height: 108px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--leaf), var(--sky));
+        }
+
+        .card.locked .cromo-art {
+            filter: grayscale(1);
+            background: linear-gradient(135deg, #66717a, #2d353b);
+        }
+
+        .cromo-body {
+            padding: 12px;
+        }
+
+        .cromo-body h2 {
+            margin: 0;
+            font-size: 1.02rem;
+        }
+
+        .cromo-body p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 0.86rem;
+            line-height: 1.35;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 26px;
+            margin-top: 10px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(47, 125, 79, 0.12);
+            color: var(--leaf-dark);
+            font-weight: 800;
+            font-size: 0.76rem;
+        }
+
+        .locked .badge {
+            background: rgba(96, 112, 124, 0.14);
+            color: var(--muted);
+        }
+
+        .mission-list, .quiz-list, .log-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .mission {
+            padding: 14px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .check {
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: rgba(96, 112, 124, 0.16);
+            color: var(--muted);
+            font-weight: 900;
+        }
+
+        .mission.done .check {
+            background: var(--leaf);
+            color: #fff;
+        }
+
+        .mission h3, .quiz-card h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .mission p, .quiz-card p, .log-item p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.35;
+        }
+
+        .quiz-card {
+            padding: 14px;
+        }
+
+        .answers {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .answer {
+            width: 100%;
+            min-height: 42px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: #fff;
+            color: var(--ink);
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .answer.correct {
+            border-color: rgba(47, 125, 79, 0.5);
+            background: rgba(47, 125, 79, 0.12);
+        }
+
+        .answer.wrong {
+            border-color: rgba(215, 91, 75, 0.5);
+            background: rgba(215, 91, 75, 0.12);
+        }
+
+        .log-item {
+            padding: 12px;
+        }
+
+        .empty-state {
+            padding: 22px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .bottom-bar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 12;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 12px;
+            background: rgba(255,255,255,0.9);
+            border-top: 1px solid rgba(96, 112, 124, 0.22);
+            backdrop-filter: blur(10px);
+        }
+
+        .primary, .secondary, .danger {
+            min-height: 48px;
+            border-radius: var(--radius);
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .primary { background: var(--leaf); }
+        .secondary { background: var(--sky); }
+        .danger { background: var(--coral); }
+
+        .detail-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 30;
+            display: none;
+            align-items: end;
+            background: rgba(16, 24, 32, 0.42);
+        }
+
+        .detail-modal.open {
+            display: flex;
+        }
+
+        .detail-sheet {
+            width: 100%;
+            max-height: 86vh;
+            overflow-y: auto;
+            border-radius: 16px 16px 0 0;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .detail-hero {
+            min-height: 150px;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 4.5rem;
+            background: linear-gradient(135deg, var(--leaf-dark), var(--sky));
+        }
+
+        .detail-content {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 18px;
+        }
+
+        .detail-content h2 {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+
+        .fact-list {
+            display: grid;
+            gap: 8px;
+            margin: 14px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .fact-list li {
+            padding: 10px;
+            border-radius: var(--radius);
+            background: #f2f6ef;
+            color: #25332b;
+        }
+
+        .form-row {
+            display: grid;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .form-row label {
+            font-weight: 800;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .form-row input {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: #fff;
+        }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        @media (min-width: 760px) {
+            .top-hud {
+                left: 22px;
+                right: 22px;
+                grid-template-columns: minmax(300px, 420px) auto;
+            }
+
+            .scan-guide {
+                left: 22px;
+                right: auto;
+                width: 420px;
+            }
+
+            .album-layout {
+                grid-template-columns: 220px 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .app-header {
+                grid-column: 1 / -1;
+                padding: 20px 24px 14px;
+            }
+
+            .tabs {
+                grid-row: 2 / 4;
+                grid-template-columns: 1fr;
+                align-content: start;
+                padding: 16px;
+                border-right: 1px solid rgba(96, 112, 124, 0.22);
+                border-bottom: 0;
+            }
+
+            .content {
+                padding: 18px 24px 98px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .bottom-bar {
+                left: 220px;
+                padding: 14px 24px;
+            }
+
+            .detail-modal {
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+            }
+
+            .detail-sheet {
+                max-width: 760px;
+                border-radius: 12px;
+            }
+        }
+
+        @media (max-width: 410px) {
+            .tabs {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .summary-band {
+                grid-template-columns: 1fr;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
+    <main class="app-shell">
+        <section id="view-ar" class="ar-view" aria-label="Safari em realidade aumentada">
+            <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;" gesture-detector>
+                <a-marker type="pattern" url="pattern-Gemini_Generated_Image_u4nhbwu4nhbwu4nh.patt" id="marker-cao">
+                    <a-entity id="fallback-cao" rotation="-90 0 0" gesture-handler>
+                        <a-sphere radius="0.34" position="-0.12 0 0.32" color="#c9985a"></a-sphere>
+                        <a-box width="0.82" height="0.38" depth="0.42" position="0 0 0" color="#b7793f"></a-box>
+                        <a-sphere radius="0.14" position="-0.38 -0.28 0.48" color="#5f3d24"></a-sphere>
+                        <a-sphere radius="0.14" position="0.24 -0.28 0.48" color="#5f3d24"></a-sphere>
+                        <a-cylinder radius="0.055" height="0.42" position="-0.32 0.26 -0.24" color="#5f3d24"></a-cylinder>
+                        <a-cylinder radius="0.055" height="0.42" position="0.32 0.26 -0.24" color="#5f3d24"></a-cylinder>
+                    </a-entity>
+                    <a-text value="Labrador" align="center" color="#ffffff" position="0 0.9 0" rotation="-90 0 0" width="3"></a-text>
+                </a-marker>
 
-    <!-- Ecrã RA -->
-    <div id="view-ar" class="ar-view">
-        <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;" gesture-detector>
-            <a-assets>
-                <a-asset-item id="cao-model" src="labrador_dog/scene.gltf"></a-asset-item>
-                <a-asset-item id="cell-model" src="animal_cell/scene.gltf"></a-asset-item>
-            </a-assets>
+                <a-marker type="pattern" url="pattern-Gemini_Generated_Image_np9v2pnp9v2pnp9v.patt" id="marker-celula">
+                    <a-entity id="fallback-celula" rotation="-90 0 0" gesture-handler>
+                        <a-sphere radius="0.54" color="#4db7b3" opacity="0.74"></a-sphere>
+                        <a-sphere radius="0.22" position="0.08 0.04 0.18" color="#7b4aa0"></a-sphere>
+                        <a-torus radius="0.42" radius-tubular="0.025" color="#f2b84b"></a-torus>
+                        <a-sphere radius="0.08" position="-0.22 0.18 0.2" color="#f06b5f"></a-sphere>
+                        <a-sphere radius="0.07" position="0.28 -0.2 0.12" color="#f06b5f"></a-sphere>
+                    </a-entity>
+                    <a-text value="Celula animal" align="center" color="#ffffff" position="0 0.9 0" rotation="-90 0 0" width="3"></a-text>
+                </a-marker>
 
-            <a-marker type="pattern" url="pattern-Gemini_Generated_Image_u4nhbwu4nhbwu4nh.patt" id="marker-cao">
-                <a-entity gltf-model="#cao-model" scale="0.2 0.2 0.2" rotation="-90 0 0" gesture-handler></a-entity>
-            </a-marker>
+                <a-entity camera></a-entity>
+            </a-scene>
 
-            <a-marker type="pattern" url="pattern-Gemini_Generated_Image_np9v2pnp9v2pnp9v.patt" id="marker-cell">
-                <a-entity gltf-model="#cell-model" scale="0.3 0.3 0.3" gesture-handler></a-entity>
-            </a-marker>
-            <a-entity camera></a-entity>
-        </a-scene>
-        
-        <button onclick="toggleView()" class="fixed top-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg z-[9999]">📒</button>
-    </div>
+            <div class="top-hud safe-top">
+                <div class="hud-panel">
+                    <div class="hud-title">
+                        <span>Safari Escolar RA</span>
+                        <small id="hud-count">0/2</small>
+                    </div>
+                    <div class="progress-track" aria-hidden="true">
+                        <div id="hud-progress" class="progress-fill"></div>
+                    </div>
+                </div>
+                <button type="button" class="icon-button" onclick="toggleView('album')" aria-label="Abrir caderneta">☰</button>
+            </div>
 
-    <!-- Ecrã Caderneta -->
-    <div id="view-album" class="album-view p-6 safe-padding">
-        <h1 class="text-2xl font-bold text-center mb-6">Caderneta Safari 🐾</h1>
-        <div class="grid grid-cols-2 gap-4" id="album-grid"></div>
-        <div class="fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200">
-            <button onclick="partilharConquistas()" class="w-full bg-green-600 text-white p-4 rounded-xl font-bold mb-2">Partilhar Conquistas 🌟</button>
-            <button onclick="toggleView()" class="w-full bg-gray-500 text-white p-4 rounded-xl font-bold">Voltar ao Safari</button>
-        </div>
+            <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+            <div class="scan-guide">
+                <div class="guide-card">
+                    <strong id="scan-title">Aponta a câmara para um marcador</strong>
+                    <span id="scan-copy">Quando encontrares um cromo, ele entra automaticamente na caderneta e desbloqueia desafios.</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-album" class="app-view" aria-label="Caderneta do safari">
+            <div class="album-layout">
+                <header class="app-header safe-top">
+                    <div class="brand">
+                        <h1>Caderneta Safari</h1>
+                        <p id="student-line">Explorador: Turma Safari</p>
+                    </div>
+                    <div class="header-actions">
+                        <button type="button" class="icon-button" onclick="toggleView('ar')" aria-label="Voltar ao safari">RA</button>
+                    </div>
+                </header>
+
+                <nav class="tabs" aria-label="Secções da caderneta">
+                    <button type="button" class="tab-button active" data-tab="album" onclick="setTab('album')">Álbum</button>
+                    <button type="button" class="tab-button" data-tab="missions" onclick="setTab('missions')">Missões</button>
+                    <button type="button" class="tab-button" data-tab="quiz" onclick="setTab('quiz')">Quiz</button>
+                    <button type="button" class="tab-button" data-tab="log" onclick="setTab('log')">Diario</button>
+                </nav>
+
+                <div class="content">
+                    <section id="panel-album" class="panel active">
+                        <div class="summary-band">
+                            <div class="metric"><b id="metric-found">0</b><span>Cromos encontrados</span></div>
+                            <div class="metric"><b id="metric-score">0</b><span>Pontos de explorador</span></div>
+                            <div class="metric"><b id="metric-quiz">0</b><span>Respostas certas</span></div>
+                        </div>
+                        <div class="grid" id="album-grid"></div>
+                    </section>
+
+                    <section id="panel-missions" class="panel">
+                        <div class="mission-list" id="mission-list"></div>
+                    </section>
+
+                    <section id="panel-quiz" class="panel">
+                        <div class="quiz-list" id="quiz-list"></div>
+                    </section>
+
+                    <section id="panel-log" class="panel">
+                        <div class="card" style="padding: 14px; margin-bottom: 12px;">
+                            <div class="form-row" style="margin-top: 0;">
+                                <label for="student-name">Nome do explorador ou turma</label>
+                                <input id="student-name" type="text" maxlength="40" placeholder="Turma Safari">
+                            </div>
+                            <div class="action-row">
+                                <button type="button" class="secondary" onclick="saveStudentName()">Guardar</button>
+                                <button type="button" class="danger" onclick="resetProgress()">Reiniciar</button>
+                            </div>
+                        </div>
+                        <div class="log-list" id="log-list"></div>
+                    </section>
+                </div>
+
+                <footer class="bottom-bar safe-bottom">
+                    <button type="button" class="primary" onclick="partilharConquistas()">Partilhar</button>
+                    <button type="button" class="secondary" onclick="exportProgress()">Exportar</button>
+                </footer>
+            </div>
+        </section>
+    </main>
+
+    <div class="detail-modal" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+        <article class="detail-sheet">
+            <div class="detail-hero" id="detail-art"></div>
+            <div class="detail-content">
+                <h2 id="detail-title"></h2>
+                <p id="detail-desc"></p>
+                <ul class="fact-list" id="detail-facts"></ul>
+                <div class="action-row">
+                    <button type="button" class="secondary" onclick="closeDetail()">Fechar</button>
+                    <button type="button" class="primary" onclick="setTab('quiz'); closeDetail(); toggleView('album')">Quiz</button>
+                </div>
+            </div>
+        </article>
     </div>
 
     <script>
-        let colheita = JSON.parse(localStorage.getItem('safari_cromos')) || { cao: false, celula: false };
+        const STORAGE_KEY = 'safari_escolar_ra_v2';
+
         const cromos = {
-            cao: { nome: "Labrador", desc: "O fiel companheiro." },
-            celula: { nome: "Célula", desc: "Unidade da vida." }
+            cao: {
+                nome: 'Labrador',
+                tipo: 'Mamífero',
+                icon: 'L',
+                desc: 'Um cão sociável, inteligente e muito usado em tarefas de apoio, busca e companhia.',
+                marker: 'marker-cao',
+                points: 50,
+                facts: [
+                    'Tem um olfato muito desenvolvido.',
+                    'É conhecido por aprender rotinas com facilidade.',
+                    'Precisa de movimento, agua e cuidados diarios.'
+                ],
+                question: 'Que sentido é especialmente apurado no Labrador?',
+                answers: ['Olfato', 'Visao noturna', 'Magnetismo'],
+                correct: 'Olfato'
+            },
+            celula: {
+                nome: 'Celula animal',
+                tipo: 'Biologia',
+                icon: 'C',
+                desc: 'A unidade básica dos seres vivos animais, com membrana, citoplasma e organelos.',
+                marker: 'marker-celula',
+                points: 50,
+                facts: [
+                    'A membrana controla trocas com o exterior.',
+                    'O núcleo guarda informação genética.',
+                    'As mitocondrias ajudam a produzir energia.'
+                ],
+                question: 'Que estrutura controla muitas trocas com o exterior da célula?',
+                answers: ['Membrana celular', 'Pelo', 'Bico'],
+                correct: 'Membrana celular'
+            }
         };
 
-        function toggleView() {
+        const missions = [
+            { id: 'first-find', title: 'Primeira descoberta', desc: 'Encontra qualquer marcador RA.', test: state => foundCount(state) >= 1 },
+            { id: 'complete-album', title: 'Álbum completo', desc: 'Desbloqueia todos os cromos disponíveis.', test: state => foundCount(state) === Object.keys(cromos).length },
+            { id: 'quiz-master', title: 'Cientista atento', desc: 'Responde corretamente a todos os quizzes desbloqueados.', test: state => quizCorrectCount(state) === foundCount(state) && foundCount(state) > 0 },
+            { id: 'field-notes', title: 'Diário de campo', desc: 'Guarda o nome do explorador ou da turma.', test: state => Boolean(state.studentName && state.studentName.trim()) }
+        ];
+
+        const defaultState = {
+            found: { cao: false, celula: false },
+            quiz: {},
+            log: [],
+            studentName: 'Turma Safari',
+            lastTab: 'album'
+        };
+
+        let state = loadState();
+
+        function loadState() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                return {
+                    ...defaultState,
+                    ...stored,
+                    found: { ...defaultState.found, ...(stored && stored.found) },
+                    quiz: { ...(stored && stored.quiz) },
+                    log: Array.isArray(stored && stored.log) ? stored.log : []
+                };
+            } catch (error) {
+                return { ...defaultState, found: { ...defaultState.found }, quiz: {}, log: [] };
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            renderAll();
+        }
+
+        function foundCount(current = state) {
+            return Object.values(current.found).filter(Boolean).length;
+        }
+
+        function quizCorrectCount(current = state) {
+            return Object.values(current.quiz).filter(answer => answer && answer.correct).length;
+        }
+
+        function addLog(text) {
+            state.log.unshift({ text, date: new Date().toLocaleString('pt-PT') });
+            state.log = state.log.slice(0, 12);
+        }
+
+        function toggleView(target) {
             const ar = document.getElementById('view-ar');
             const album = document.getElementById('view-album');
-            if(ar.style.display === 'none') { ar.style.display = 'block'; album.style.display = 'none'; }
-            else { ar.style.display = 'none'; album.style.display = 'block'; renderAlbum(); }
+            const showAlbum = target ? target === 'album' : ar.style.display !== 'none';
+
+            ar.style.display = showAlbum ? 'none' : 'block';
+            album.style.display = showAlbum ? 'block' : 'none';
+
+            if (showAlbum) renderAll();
+        }
+
+        function setTab(tab) {
+            state.lastTab = tab;
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.toggle('active', button.dataset.tab === tab);
+            });
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === `panel-${tab}`);
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
 
         function marcarEncontrado(id) {
-            if(!colheita[id]) {
-                colheita[id] = true;
-                localStorage.setItem('safari_cromos', JSON.stringify(colheita));
-                alert("Novo cromo desbloqueado: " + cromos[id].nome + "!");
+            const cromo = cromos[id];
+            if (!cromo) return;
+
+            if (!state.found[id]) {
+                state.found[id] = true;
+                addLog(`Cromo desbloqueado: ${cromo.nome}`);
+                saveState();
+                showToast(`Novo cromo: ${cromo.nome}`, `${cromo.points} pontos adicionados a tua caderneta.`);
+                openDetail(id);
+            } else {
+                showToast(`${cromo.nome} encontrado outra vez`, 'O cromo ja esta guardado na caderneta.');
             }
+        }
+
+        function renderAll() {
+            renderHud();
+            renderAlbum();
+            renderMissions();
+            renderQuiz();
+            renderLog();
+            document.getElementById('student-name').value = state.studentName || '';
+            document.getElementById('student-line').textContent = `Explorador: ${state.studentName || 'Turma Safari'}`;
+            setTab(state.lastTab || 'album');
+        }
+
+        function renderHud() {
+            const total = Object.keys(cromos).length;
+            const count = foundCount();
+            const progress = Math.round((count / total) * 100);
+            document.getElementById('hud-count').textContent = `${count}/${total}`;
+            document.getElementById('hud-progress').style.width = `${progress}%`;
+            document.getElementById('scan-title').textContent = count === total ? 'Safari completo' : 'Aponta a câmara para um marcador';
+            document.getElementById('scan-copy').textContent = count === total
+                ? 'Todos os cromos foram encontrados. Abre a caderneta para rever as descobertas.'
+                : 'Quando encontrares um cromo, ele entra automaticamente na caderneta e desbloqueia desafios.';
         }
 
         function renderAlbum() {
             const grid = document.getElementById('album-grid');
             grid.innerHTML = '';
-            for(const id in cromos) {
-                const isFound = colheita[id];
-                grid.innerHTML += `<div class="bg-white p-4 rounded-xl shadow border-2 ${isFound ? 'border-green-400' : 'border-gray-200 cromo-locked'}">
-                    <h2 class="font-bold">${cromos[id].nome}</h2>
-                    <p class="text-xs text-gray-500 mt-1">${isFound ? cromos[id].desc : "Por encontrar..."}</p>
-                </div>`;
+
+            Object.entries(cromos).forEach(([id, cromo]) => {
+                const isFound = Boolean(state.found[id]);
+                const card = document.createElement('article');
+                card.className = `card ${isFound ? '' : 'locked'}`;
+                card.innerHTML = `
+                    <button type="button" class="cromo-button" onclick="openDetail('${id}')">
+                        <div class="cromo-art">${isFound ? cromo.icon : '?'}</div>
+                        <div class="cromo-body">
+                            <h2>${isFound ? cromo.nome : 'Cromo bloqueado'}</h2>
+                    <p>${isFound ? cromo.desc : 'Procura este marcador no safari para revelar a ficha.'}</p>
+                            <span class="badge">${isFound ? cromo.tipo : 'Por encontrar'}</span>
+                        </div>
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+
+            document.getElementById('metric-found').textContent = foundCount();
+            document.getElementById('metric-score').textContent = Object.entries(cromos)
+                .filter(([id]) => state.found[id])
+                .reduce((sum, [, cromo]) => sum + cromo.points, 0);
+            document.getElementById('metric-quiz').textContent = quizCorrectCount();
+        }
+
+        function renderMissions() {
+            const list = document.getElementById('mission-list');
+            list.innerHTML = '';
+
+            missions.forEach(mission => {
+                const done = mission.test(state);
+                const item = document.createElement('article');
+                item.className = `card mission ${done ? 'done' : ''}`;
+                item.innerHTML = `
+                    <div class="check">${done ? '✓' : ''}</div>
+                    <div>
+                        <h3>${mission.title}</h3>
+                        <p>${mission.desc}</p>
+                    </div>
+                    <span class="badge">${done ? 'Feita' : 'Aberta'}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function renderQuiz() {
+            const list = document.getElementById('quiz-list');
+            list.innerHTML = '';
+            const foundIds = Object.keys(cromos).filter(id => state.found[id]);
+
+            if (!foundIds.length) {
+                list.innerHTML = '<div class="card empty-state">Encontra primeiro um marcador para desbloquear perguntas.</div>';
+                return;
+            }
+
+            foundIds.forEach(id => {
+                const cromo = cromos[id];
+                const saved = state.quiz[id];
+                const card = document.createElement('article');
+                card.className = 'card quiz-card';
+                card.innerHTML = `
+                    <h3>${cromo.nome}</h3>
+                    <p>${cromo.question}</p>
+                    <div class="answers">
+                        ${cromo.answers.map(answer => {
+                            const status = saved && saved.answer === answer ? (saved.correct ? 'correct' : 'wrong') : '';
+                            return `<button type="button" class="answer ${status}" onclick="answerQuiz('${id}', '${answer}')">${answer}</button>`;
+                        }).join('')}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function renderLog() {
+            const list = document.getElementById('log-list');
+            if (!state.log.length) {
+                list.innerHTML = '<div class="card empty-state">O diario de campo ainda esta vazio.</div>';
+                return;
+            }
+
+            list.innerHTML = state.log.map(entry => `
+                <article class="card log-item">
+                    <strong>${entry.date}</strong>
+                    <p>${entry.text}</p>
+                </article>
+            `).join('');
+        }
+
+        function openDetail(id) {
+            const cromo = cromos[id];
+            if (!cromo) return;
+            const isFound = Boolean(state.found[id]);
+
+            document.getElementById('detail-art').textContent = isFound ? cromo.icon : '?';
+            document.getElementById('detail-title').textContent = isFound ? cromo.nome : 'Cromo por encontrar';
+            document.getElementById('detail-desc').textContent = isFound ? cromo.desc : 'Volta ao safari e aponta a câmara para o marcador certo.';
+            document.getElementById('detail-facts').innerHTML = isFound
+                ? cromo.facts.map(fact => `<li>${fact}</li>`).join('')
+                : '<li>A ficha completa fica disponivel depois da descoberta.</li>';
+            document.getElementById('detail-modal').classList.add('open');
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-modal').classList.remove('open');
+        }
+
+        function answerQuiz(id, answer) {
+            const cromo = cromos[id];
+            const correct = cromo.correct === answer;
+            state.quiz[id] = { answer, correct };
+            addLog(`${correct ? 'Resposta certa' : 'Resposta a rever'} no quiz: ${cromo.nome}`);
+            saveState();
+            showToast(correct ? 'Resposta certa' : 'Tenta rever a ficha', correct ? 'Boa observacao de campo.' : `Pista: ${cromo.facts[0]}`);
+        }
+
+        function saveStudentName() {
+            const input = document.getElementById('student-name');
+            state.studentName = input.value.trim() || 'Turma Safari';
+            addLog(`Explorador definido: ${state.studentName}`);
+            saveState();
+            showToast('Nome guardado', state.studentName);
+        }
+
+        function resetProgress() {
+            const confirmed = window.confirm('Queres mesmo reiniciar a caderneta?');
+            if (!confirmed) return;
+            state = { ...defaultState, found: { ...defaultState.found }, quiz: {}, log: [] };
+            saveState();
+            showToast('Caderneta reiniciada', 'O safari está pronto para uma nova turma.');
+        }
+
+        function partilharConquistas() {
+            const total = Object.keys(cromos).length;
+            const count = foundCount();
+            const text = `Safari Escolar RA: ${state.studentName || 'Turma Safari'} encontrou ${count}/${total} cromos e acertou ${quizCorrectCount()} perguntas.`;
+            if (navigator.share) {
+                navigator.share({ title: 'Safari Escolar RA', text });
+            } else {
+                showToast('Resumo do safari', text);
             }
         }
 
-        document.querySelector('#marker-cao').addEventListener('markerFound', () => marcarEncontrado('cao'));
-        document.querySelector('#marker-cell').addEventListener('markerFound', () => marcarEncontrado('celula'));
+        function exportProgress() {
+            const total = Object.keys(cromos).length;
+            const lines = [
+                'Safari Escolar RA',
+                `Explorador: ${state.studentName || 'Turma Safari'}`,
+                `Cromos: ${foundCount()}/${total}`,
+                `Quiz: ${quizCorrectCount()}/${foundCount()}`,
+                '',
+                'Descobertas:',
+                ...Object.entries(cromos).map(([id, cromo]) => `- ${cromo.nome}: ${state.found[id] ? 'encontrado' : 'por encontrar'}`),
+                '',
+                'Diario:',
+                ...(state.log.length ? state.log.map(entry => `- ${entry.date}: ${entry.text}`) : ['- Sem entradas'])
+            ];
 
-        function partilharConquistas() {
-            const count = Object.values(colheita).filter(Boolean).length;
-            const text = `Safari Escolar: Já encontrei ${count}/2 animais! 🐾`;
-            if (navigator.share) { navigator.share({title: 'Safari Escolar', text: text}); }
-            else { alert(text); }
+            const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'safari-escolar-progresso.txt';
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast('Exportação criada', 'O resumo foi preparado em formato de texto.');
         }
+
+        function showToast(title, body) {
+            const stack = document.getElementById('toast-stack');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<strong>${title}</strong><br><span>${body}</span>`;
+            stack.appendChild(toast);
+            setTimeout(() => toast.remove(), 4200);
+        }
+
+        function bindMarker(id, cromoId) {
+            const marker = document.getElementById(id);
+            if (!marker) return;
+            marker.addEventListener('markerFound', () => marcarEncontrado(cromoId));
+        }
+
+        async function loadOptionalModel(markerId, fallbackId, src, scale, rotation) {
+            try {
+                const response = await fetch(src, { method: 'HEAD' });
+                if (!response.ok || !window.AFRAME) return;
+
+                const marker = document.getElementById(markerId);
+                const fallback = document.getElementById(fallbackId);
+                const entity = document.createElement('a-entity');
+                entity.setAttribute('gltf-model', src);
+                entity.setAttribute('scale', scale);
+                entity.setAttribute('rotation', rotation);
+                entity.setAttribute('gesture-handler', '');
+                entity.addEventListener('model-loaded', () => {
+                    if (fallback) fallback.setAttribute('visible', 'false');
+                });
+                marker.appendChild(entity);
+            } catch (error) {
+                // Fallback primitives remain visible when the model files are not available.
+            }
+        }
+
+        function bootArEnhancements() {
+            let attempts = 0;
+            const timer = setInterval(() => {
+                attempts += 1;
+                if (window.AFRAME) {
+                    clearInterval(timer);
+                    loadOptionalModel('marker-cao', 'fallback-cao', 'labrador_dog/scene.gltf', '0.2 0.2 0.2', '-90 0 0');
+                    loadOptionalModel('marker-celula', 'fallback-celula', 'animal_cell/scene.gltf', '0.3 0.3 0.3', '-90 0 0');
+                }
+                if (attempts >= 20) clearInterval(timer);
+            }, 250);
+        }
+
+        document.getElementById('detail-modal').addEventListener('click', event => {
+            if (event.target.id === 'detail-modal') closeDetail();
+        });
+
+        bindMarker('marker-cao', 'cao');
+        bindMarker('marker-celula', 'celula');
+        renderAll();
+        bootArEnhancements();
+
+        function scheduleArHealthCheck() {
+            setTimeout(() => {
+                if (!window.AFRAME) {
+                    document.getElementById('scan-title').textContent = 'Modo RA indisponível nesta abertura';
+                    document.getElementById('scan-copy').textContent = 'Confirma a ligação à internet para carregar A-Frame/AR.js e abre a app por localhost ou HTTPS para usar a câmara.';
+                    showToast('RA não carregou', 'A caderneta continua disponível; a câmara precisa das bibliotecas externas.');
+                }
+            }, 1800);
+        }
+
+        scheduleArHealthCheck();
     </script>
 </body>
 </html>
