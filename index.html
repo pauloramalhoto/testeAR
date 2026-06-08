@@ -26,6 +26,12 @@
 
         * { box-sizing: border-box; }
 
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             margin: 0;
             overflow: hidden;
@@ -671,7 +677,7 @@
 <body>
     <main class="app-shell">
         <section id="view-ar" class="ar-view" aria-label="Safari em realidade aumentada">
-            <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;" gesture-detector>
+            <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; debugUIEnabled: false;" gesture-detector>
                 <a-marker type="pattern" url="pattern-Gemini_Generated_Image_u4nhbwu4nhbwu4nh.patt" id="marker-cao">
                     <a-entity id="fallback-cao" rotation="-90 0 0" gesture-handler>
                         <a-sphere radius="0.34" position="-0.12 0 0.32" color="#c9985a"></a-sphere>
@@ -1157,11 +1163,30 @@
                 attempts += 1;
                 if (window.AFRAME) {
                     clearInterval(timer);
+                    fitArViewport();
                     loadOptionalModel('marker-cao', 'fallback-cao', 'labrador_dog/scene.gltf', '0.2 0.2 0.2', '-90 0 0');
                     loadOptionalModel('marker-celula', 'fallback-celula', 'animal_cell/scene.gltf', '0.3 0.3 0.3', '-90 0 0');
                 }
                 if (attempts >= 60) clearInterval(timer);
             }, 250);
+        }
+
+        function fitArViewport() {
+            const scene = document.querySelector('a-scene');
+            const canvas = document.querySelector('.a-canvas, canvas');
+            const apply = () => {
+                if (canvas) {
+                    canvas.style.width = `${window.innerWidth}px`;
+                    canvas.style.height = `${window.innerHeight}px`;
+                }
+                if (scene && scene.renderer) {
+                    scene.renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+                window.dispatchEvent(new Event('resize'));
+            };
+            apply();
+            setTimeout(apply, 600);
+            setTimeout(apply, 1600);
         }
 
         document.getElementById('detail-modal').addEventListener('click', event => {
@@ -1172,6 +1197,7 @@
         bindMarker('marker-celula', 'celula');
         renderAll();
         bootArEnhancements();
+        window.addEventListener('resize', fitArViewport);
 
         function scheduleArHealthCheck() {
             let checks = 0;
