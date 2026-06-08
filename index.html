@@ -3,53 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safari RA: Animais 3D Interativos</title>
+    <title>Safari Científico RA</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
     <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
-    
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .ui-overlay { position: fixed; bottom: 20px; width: 100%; text-align: center; z-index: 9999; }
-        button { background: #EF4444; color: white; padding: 12px 24px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; }
+        .loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #064e3b; display: flex; align-items: center; justify-content: center; color: white; z-index: 10000; }
+        .ficha-info { position: fixed; top: 20px; left: 20px; right: 20px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 15px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 9990; font-family: sans-serif; }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
 
-    <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;" gesture-detector>
-        
+    <!-- Ecrã de Carregamento -->
+    <div id="loader" class="loader">A preparar o Safari...</div>
+
+    <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;" gesture-detector id="scene">
         <a-assets>
             <a-asset-item id="cao-model" src="labrador_dog/scene.gltf"></a-asset-item>
             <a-asset-item id="cell-model" src="animal_cell/scene.gltf"></a-asset-item>
         </a-assets>
 
-        <!-- Marcador do Labrador: Adicionamos um container para ajustar o eixo de rotação -->
         <a-marker type="pattern" url="pattern-Gemini_Generated_Image_u4nhbwu4nhbwu4nh.patt" id="marker-cao">
             <a-entity class="clickable" gesture-handler>
-                <a-entity gltf-model="#cao-model" 
-                          scale="0.2 0.2 0.2" 
-                          position="0 0 0" 
-                          rotation="-90 0 0">
-                </a-entity>
+                <a-entity gltf-model="#cao-model" scale="0.2 0.2 0.2" rotation="-90 0 0"></a-entity>
             </a-entity>
         </a-marker>
 
-        <!-- Marcador da Célula -->
         <a-marker type="pattern" url="pattern-Gemini_Generated_Image_np9v2pnp9v2pnp9v.patt" id="marker-cell">
-            <a-entity id="entidade-celula"
-                      gltf-model="#cell-model" 
-                      scale="0.3 0.3 0.3" 
-                      class="clickable" 
-                      gesture-handler>
+            <a-entity class="clickable" gesture-handler>
+                <a-entity gltf-model="#cell-model" scale="0.3 0.3 0.3"></a-entity>
             </a-entity>
         </a-marker>
 
         <a-entity camera></a-entity>
     </a-scene>
 
-    <div class="ui-overlay">
-        <button onclick="document.location.reload()">Reiniciar Câmara</button>
+    <!-- Ficha de Campo -->
+    <div id="ficha" class="ficha-info">
+        <h2 id="titulo-animal" class="text-xl font-bold text-green-800">Animal</h2>
+        <p id="texto-curiosidade" class="mt-2 text-gray-700"></p>
+        <button onclick="capturarFoto()" class="mt-4 bg-green-700 text-white px-4 py-2 rounded-full font-bold w-full">📸 Capturar Troféu!</button>
     </div>
 
+    <!-- Diário -->
+    <div class="fixed bottom-0 w-full p-4 bg-green-900 text-white z-[9999] rounded-t-2xl">
+        <h1 class="text-lg font-bold text-center">🐾 Diário do Explorador</h1>
+    </div>
+
+    <script>
+        window.addEventListener('load', () => document.getElementById('loader').style.display = 'none');
+        
+        const markerCao = document.querySelector('#marker-cao');
+        const markerCell = document.querySelector('#marker-cell');
+        const ficha = document.getElementById('ficha');
+        const titulo = document.getElementById('titulo-animal');
+        const texto = document.getElementById('texto-curiosidade');
+
+        function capturarFoto() {
+            const canvas = document.querySelector('canvas');
+            const dataURL = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'trofeu-safari.png';
+            link.href = dataURL;
+            link.click();
+        }
+
+        markerCao.addEventListener('markerFound', () => {
+            titulo.innerText = "Labrador Retriever";
+            texto.innerText = "Sabias que o Labrador é um cão super inteligente e adora nadar? Tem uma camada de pelo impermeável!";
+            ficha.style.display = 'block';
+        });
+
+        markerCell.addEventListener('markerFound', () => {
+            titulo.innerText = "Célula Animal";
+            texto.innerText = "A célula é a unidade básica da vida! Todos os seres vivos, desde o Labrador até às plantas, são feitos de células.";
+            ficha.style.display = 'block';
+        });
+
+        [markerCao, markerCell].forEach(m => m.addEventListener('markerLost', () => ficha.style.display = 'none'));
+    </script>
 </body>
 </html>
